@@ -23,13 +23,17 @@ function perimeterPoint(t: number) {
 }
 
 // Deterministic scattered start positions (golden-angle spiral) and
-// their targets on the package outline — identical on server and client.
+// their targets on the package outline. Trig results are rounded to two
+// decimals because Math.cos/sin can differ by 1 ULP between the Node
+// server and the browser, which would break hydration.
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 const dots = Array.from({ length: DOTS }, (_, i) => {
   const angle = i * 2.39996;
   const radius = 150 + ((i * 73) % 150);
   return {
-    sx: Math.min(880, Math.max(20, 450 + Math.cos(angle) * radius * 1.5)),
-    sy: Math.min(540, Math.max(20, 315 + Math.sin(angle) * radius * 0.85)),
+    sx: round2(Math.min(880, Math.max(20, 450 + Math.cos(angle) * radius * 1.5))),
+    sy: round2(Math.min(540, Math.max(20, 315 + Math.sin(angle) * radius * 0.85))),
     target: perimeterPoint(i / DOTS),
     r: 2.6 + ((i * 37) % 10) / 4,
   };

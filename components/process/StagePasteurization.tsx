@@ -150,10 +150,12 @@ export default function StagePasteurization() {
                 <circle cx="672" cy="210" r="72" fill="#FFFFFF" stroke="#AEBDCB" strokeWidth="4" />
                 {Array.from({ length: 11 }).map((_, i) => {
                   const angle = (-210 + i * 24) * (Math.PI / 180);
-                  const x1 = 672 + Math.cos(angle) * 58;
-                  const y1 = 210 + Math.sin(angle) * 58;
-                  const x2 = 672 + Math.cos(angle) * 48;
-                  const y2 = 210 + Math.sin(angle) * 48;
+                  // Round trig results: Math.cos/sin can differ by 1 ULP
+                  // between Node and browser, breaking hydration.
+                  const x1 = (672 + Math.cos(angle) * 58).toFixed(2);
+                  const y1 = (210 + Math.sin(angle) * 58).toFixed(2);
+                  const x2 = (672 + Math.cos(angle) * 48).toFixed(2);
+                  const y2 = (210 + Math.sin(angle) * 48).toFixed(2);
                   return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#123A66" strokeWidth={i % 5 === 0 ? 3 : 1.5} />;
                 })}
                 <line className="gauge-needle" x1="672" y1="210" x2="672" y2="156" stroke="#C9A96A" strokeWidth="5" strokeLinecap="round" />
