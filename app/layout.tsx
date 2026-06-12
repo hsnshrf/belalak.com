@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/playfair-display";
-import "@fontsource-variable/inter";
+// Carlito: metric-compatible open-source fallback for Calibri, used when
+// the visitor's system doesn't ship Calibri itself.
+import "@fontsource/carlito/400.css";
+import "@fontsource/carlito/400-italic.css";
+import "@fontsource/carlito/700.css";
+import "@fontsource/carlito/700-italic.css";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 

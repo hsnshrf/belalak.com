@@ -32,9 +32,12 @@ const config: Config = {
           dark: "#A8873F",
         },
       },
+      // Whole site uses Calibri (Carlito = metric-compatible web fallback).
+      // `serif` is kept as an alias so existing font-serif usages resolve
+      // to the same stack.
       fontFamily: {
-        serif: ['"Playfair Display Variable"', "Georgia", "serif"],
-        sans: ['"Inter Variable"', "system-ui", "-apple-system", "sans-serif"],
+        serif: ["Calibri", "Carlito", '"Segoe UI"', "system-ui", "sans-serif"],
+        sans: ["Calibri", "Carlito", '"Segoe UI"', "system-ui", "sans-serif"],
       },
       letterSpacing: {
         kicker: "0.22em",

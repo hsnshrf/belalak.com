@@ -15,7 +15,7 @@ visually transforms fresh Belarusian milk into premium milk powder.
 | Scroll choreography | GSAP 3 + ScrollTrigger (scrub-driven pinned scenes) |
 | Smooth scrolling | Lenis (integrated into GSAP's ticker) |
 | Particle effects | Hand-rolled `<canvas>` system (spray-drying tower) |
-| Fonts | Playfair Display Variable (serif) + Inter Variable (sans), self-hosted via Fontsource |
+| Fonts | Calibri site-wide, with self-hosted Carlito (metric-compatible open clone) as the web fallback via Fontsource |
 
 Three.js/R3F was deliberately left out: every scene is achievable with SVG + canvas +
 GSAP at a fraction of the bundle cost, which is what keeps Lighthouse comfortably
@@ -95,7 +95,7 @@ npm start            # serves on $PORT (default 3000) behind your reverse proxy
 
 ## Performance & Accessibility
 
-- Self-hosted variable fonts (two files), zero image downloads, code-drawn graphics
+- Calibri served from the visitor's system where available; small self-hosted Carlito fallback files otherwise. Zero image downloads, code-drawn graphics
 - Canvas work pauses when its section leaves the viewport; DPR capped at 2
 - `prefers-reduced-motion` honoured everywhere: Lenis disabled, scrub scenes collapse
   to static final frames, decorative animation suppressed in CSS

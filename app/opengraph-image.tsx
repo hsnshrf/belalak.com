@@ -5,7 +5,13 @@ export const alt = "Belalak Milk — From Pure Belarusian Milk to Premium Milk P
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OpengraphImage() {
+export default async function OpengraphImage() {
+  // Carlito = metric-compatible stand-in for Calibri (the site typeface);
+  // the OG renderer (satori) needs an embedded font file.
+  const carlito = await fetch(new URL("./fonts/carlito-700.woff", import.meta.url)).then(
+    (res) => res.arrayBuffer()
+  );
+
   return new ImageResponse(
     (
       <div
@@ -18,7 +24,7 @@ export default function OpengraphImage() {
           justifyContent: "center",
           background: "linear-gradient(135deg, #041527 0%, #0A2E52 55%, #123A66 100%)",
           color: "#FAFAFA",
-          fontFamily: "serif",
+          fontFamily: "Carlito",
         }}
       >
         <div
@@ -65,6 +71,9 @@ export default function OpengraphImage() {
         </div>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      fonts: [{ name: "Carlito", data: carlito, style: "normal", weight: 700 }],
+    }
   );
 }

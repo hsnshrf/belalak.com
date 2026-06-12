@@ -153,7 +153,7 @@ export default function StageFinalProduct() {
                 {/* label */}
                 <g textAnchor="middle">
                   <path d="M450 226 c7 10.5 13 17.4 13 24.5 a13 13 0 1 1 -26 0 c0 -7.1 6 -14 13 -24.5z" fill="#0A2E52" />
-                  <text x="450" y="298" fontFamily="Georgia, serif" fontSize="30" letterSpacing="6" fill="#0A2E52">
+                  <text x="450" y="298" fontFamily="Calibri, Carlito, sans-serif" fontSize="30" letterSpacing="6" fill="#0A2E52">
                     BELALAK
                   </text>
                   <line x1="395" y1="314" x2="505" y2="314" stroke="#C9A96A" strokeWidth="1.5" />
