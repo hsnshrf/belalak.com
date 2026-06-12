@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --nav-height: 4.5rem;
+  }
+
+  html {
+    /* Lenis owns scrolling; native smooth-scroll would fight it. */
+    scroll-behavior: auto;
+  }
+
+  body {
+    @apply bg-milk font-sans text-deep-900 antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    @apply bg-deep text-milk;
+  }
+
+  /* Keyboard focus should always be visible on a marketing site. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold ring-offset-2 ring-offset-milk;
+  }
+}
+
+@layer components {
+  .container-site {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12;
+  }
+
+  /* Glassmorphism surface used across navbar, modals and the contact form. */
+  .glass {
+    @apply border border-white/15 bg-white/10 backdrop-blur-xl;
+  }
+
+  .glass-dark {
+    @apply border border-deep-700/40 bg-deep-900/60 backdrop-blur-xl;
+  }
+
+  .kicker {
+    @apply text-[0.7rem] font-semibold uppercase tracking-kicker;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition-all duration-300 ease-luxe;
+  }
+
+  .btn-primary {
+    @apply btn bg-deep text-milk hover:-translate-y-0.5 hover:bg-deep-700 hover:shadow-xl hover:shadow-deep/25;
+  }
+
+  .btn-light {
+    @apply btn bg-milk text-deep hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20;
+  }
+
+  .btn-ghost {
+    @apply btn border border-current bg-transparent hover:-translate-y-0.5;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Fine film-grain overlay that keeps flat colour fields from feeling sterile. */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Animated dashes used for milk flowing through pipelines. */
+  .flow-dash {
+    stroke-dasharray: 14 18;
+    animation: flow-dash 1.1s linear infinite;
+  }
+
+  .flow-dash-slow {
+    stroke-dasharray: 10 14;
+    animation: flow-dash 2.2s linear infinite;
+  }
+
+  /* Rising water-vapour particles (concentration stage). */
+  .vapor {
+    animation: vapor-rise 4s ease-in infinite;
+  }
+
+  /* Export-route arcs draw themselves on a loop. */
+  .route-draw {
+    stroke-dasharray: 6 10;
+    animation: flow-dash 1.6s linear infinite;
+  }
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+/* Scroll-hint bead travelling down its track (hero). */
+.hint-bead {
+  animation: hint-bead 1.6s ease-in-out infinite;
+}
+
+@keyframes hint-bead {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(400%);
+  }
+}
+
+@keyframes vapor-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-90px);
+    opacity: 0;
+  }
+}
+
+/* Lenis recommended styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Hard fallback: kill all decorative animation for reduced-motion users.
+   Scroll-driven GSAP timelines are separately disabled in JS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
