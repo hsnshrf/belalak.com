@@ -1,3 +1,5 @@
+import Image from "next/image";
+import logo from "@/public/logo.png";
 import { products } from "@/lib/products";
 
 const COMPANY_LINKS = [
@@ -15,11 +17,10 @@ export default function Footer() {
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           {/* brand */}
           <div>
-            <a href="#top" className="flex items-center gap-2.5 text-milk">
-              <svg viewBox="0 0 64 64" className="h-7 w-7" aria-hidden="true">
-                <path d="M32 6c8 12 15 20 15 29a15 15 0 1 1-30 0c0-9 7-17 15-29z" fill="currentColor" />
-              </svg>
-              <span className="font-serif text-xl tracking-[0.18em]">BELALAK</span>
+            <a href="#top" aria-label="Belalak Milk — back to top" className="inline-block">
+              <span className="inline-flex items-center rounded-2xl bg-white px-4 py-3 shadow-sm">
+                <Image src={logo} alt="Belalak Milk" className="h-14 w-auto" />
+              </span>
             </a>
             <p className="mt-5 max-w-sm text-sm leading-relaxed">
               Premium milk powder supplier sourcing and manufacturing in the Republic of

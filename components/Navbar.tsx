@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import logo from "@/public/logo.png";
 
 const links = [
   { href: "#process", label: "The Journey" },
@@ -10,17 +12,6 @@ const links = [
   { href: "#quality", label: "Quality" },
   { href: "#about", label: "About" },
 ];
-
-function DropMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <path
-        d="M32 6c8 12 15 20 15 29a15 15 0 1 1-30 0c0-9 7-17 15-29z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -40,9 +31,11 @@ export default function Navbar() {
       }`}
     >
       <nav className="container-site flex items-center justify-between" aria-label="Main">
-        <a href="#top" className="flex items-center gap-2.5 text-milk">
-          <DropMark className="h-7 w-7" />
-          <span className="font-serif text-xl tracking-[0.18em]">BELALAK</span>
+        <a href="#top" aria-label="Belalak Milk — home" className="shrink-0">
+          {/* white plate keeps the blue logo legible on dark sections */}
+          <span className="inline-flex items-center rounded-xl bg-white px-2.5 py-1.5 shadow-sm transition-transform duration-300 ease-luxe hover:scale-[1.03]">
+            <Image src={logo} alt="Belalak Milk" priority className="h-9 w-auto" />
+          </span>
         </a>
 
         <ul className="hidden items-center gap-8 lg:flex">

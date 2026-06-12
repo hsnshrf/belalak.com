@@ -8,9 +8,10 @@ export const contentType = "image/png";
 export default async function OpengraphImage() {
   // Carlito = metric-compatible stand-in for Calibri (the site typeface);
   // the OG renderer (satori) needs an embedded font file.
-  const carlito = await fetch(new URL("./fonts/carlito-700.woff", import.meta.url)).then(
-    (res) => res.arrayBuffer()
-  );
+  const [carlito, logo] = await Promise.all([
+    fetch(new URL("./fonts/carlito-700.woff", import.meta.url)).then((res) => res.arrayBuffer()),
+    fetch(new URL("./og-logo.png", import.meta.url)).then((res) => res.arrayBuffer()),
+  ]);
 
   return new ImageResponse(
     (
@@ -27,31 +28,32 @@ export default async function OpengraphImage() {
           fontFamily: "Carlito",
         }}
       >
+        {/* brand logo on a white plate for contrast */}
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            gap: 24,
-            marginBottom: 36,
+            background: "#FFFFFF",
+            borderRadius: 32,
+            padding: "28px 44px",
+            marginBottom: 40,
+            boxShadow: "0 18px 50px rgba(0,0,0,0.35)",
           }}
         >
-          {/* Milk drop emblem */}
-          <svg width="84" height="84" viewBox="0 0 64 64">
-            <path
-              d="M32 6c8 12 15 20 15 29a15 15 0 1 1-30 0c0-9 7-17 15-29z"
-              fill="#FAFAFA"
-            />
-          </svg>
-          <div style={{ fontSize: 64, letterSpacing: 10, display: "flex" }}>
-            BELALAK
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logo as unknown as string}
+            alt=""
+            width={310}
+            height={260}
+            style={{ objectFit: "contain" }}
+          />
         </div>
         <div
           style={{
-            fontSize: 34,
+            fontSize: 36,
             color: "#FFF7E8",
             textAlign: "center",
-            maxWidth: 900,
+            maxWidth: 940,
             display: "flex",
           }}
         >
@@ -59,7 +61,7 @@ export default async function OpengraphImage() {
         </div>
         <div
           style={{
-            marginTop: 28,
+            marginTop: 24,
             fontSize: 20,
             letterSpacing: 6,
             color: "#C9A96A",
