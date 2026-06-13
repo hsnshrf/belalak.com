@@ -31,11 +31,13 @@ export default function Navbar() {
       }`}
     >
       <nav className="container-site flex items-center justify-between" aria-label="Main">
-        <a href="#top" aria-label="Belalak Milk — home" className="shrink-0">
-          {/* white plate keeps the blue logo legible on dark sections */}
-          <span className="inline-flex items-center rounded-xl bg-white px-2.5 py-1.5 shadow-sm transition-transform duration-300 ease-luxe hover:scale-[1.03]">
-            <Image src={logo} alt="Belalak Milk" priority className="h-9 w-auto" />
-          </span>
+        <a href="#top" aria-label="Belalak Milk — home" className="shrink-0 transition-transform duration-300 ease-luxe hover:scale-[1.03]">
+          <Image
+            src={logo}
+            alt="Belalak Milk"
+            priority
+            className="h-9 w-auto drop-shadow-[0_2px_8px_rgba(255,247,232,0.45)]"
+          />
         </a>
 
         <ul className="hidden items-center gap-8 lg:flex">

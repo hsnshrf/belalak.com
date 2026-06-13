@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import MilkSpiral from "@/components/MilkSpiral";
 import ProcessJourney from "@/components/process/ProcessJourney";
 import Products from "@/components/Products";
 import WhyBelarus from "@/components/WhyBelarus";
@@ -41,6 +42,7 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
+        <MilkSpiral />
         <ProcessJourney />
         <Products />
         <WhyBelarus />

@@ -5,22 +5,19 @@ import { gsap } from "@/lib/gsap";
 import { usePrefersReducedMotion } from "@/lib/hooks";
 
 const HEADLINE = "From Pure Belarusian Milk to Premium Milk Powder";
-// Words rendered in italic gold serif for emphasis.
 const ACCENT_WORDS = new Set(["Premium", "Milk", "Powder"]);
 
-// Deterministic splash-droplet geometry (Math.random in render would
-// break SSR hydration).
 const SPLASH = [
-  { dx: -130, dy: -95, r: 6 },
-  { dx: -95, dy: -130, r: 4.5 },
-  { dx: -60, dy: -105, r: 5.5 },
-  { dx: -28, dy: -150, r: 4 },
-  { dx: 6, dy: -160, r: 5 },
-  { dx: 40, dy: -140, r: 4.5 },
-  { dx: 75, dy: -115, r: 6 },
-  { dx: 110, dy: -125, r: 4 },
-  { dx: 140, dy: -90, r: 5.5 },
-  { dx: 28, dy: -100, r: 3.5 },
+  { dx: -128, dy: -96, r: 6.5 },
+  { dx: -93, dy: -132, r: 5 },
+  { dx: -57, dy: -108, r: 6 },
+  { dx: -26, dy: -152, r: 4.5 },
+  { dx: 8, dy: -162, r: 5.5 },
+  { dx: 42, dy: -144, r: 5 },
+  { dx: 77, dy: -118, r: 6.5 },
+  { dx: 112, dy: -128, r: 4.5 },
+  { dx: 142, dy: -92, r: 6 },
+  { dx: 28, dy: -102, r: 4 },
 ];
 
 const DUST = [
@@ -33,9 +30,9 @@ const DUST = [
 ];
 
 /**
- * Cinematic hero: a single milk drop hangs in space; scrolling lets it
- * fall while the "camera" (an SVG group scale) pulls back to reveal a
- * stainless collection tank. Impact triggers splash + ripples, then the
+ * Cinematic hero: a photo-realistic milk drop hangs in space; scrolling
+ * lets it fall into a wooden dairy farm bucket. The camera pulls back on
+ * scroll to reveal the full bucket. Impact → crown splash → ripples →
  * headline rises. Entirely scrub-driven via one GSAP timeline.
  */
 export default function Hero() {
@@ -48,7 +45,6 @@ export default function Hero() {
 
     const ctx = gsap.context(() => {
       if (reduced) {
-        // Static final frame: drop gone, copy visible.
         gsap.set(".hero-drop", { autoAlpha: 0 });
         gsap.set([".hero-word", ".hero-sub", ".hero-ctas"], { autoAlpha: 1, y: 0, yPercent: 0 });
         gsap.set(".hero-hint", { autoAlpha: 0 });
@@ -65,11 +61,8 @@ export default function Hero() {
         },
       });
 
-      // Scroll hint disappears the moment the story starts.
       tl.to(".hero-hint", { autoAlpha: 0, duration: 0.04 }, 0.01);
 
-      // Camera pull-back: starts framed tight on the suspended drop
-      // (tank hidden below the frame), ends on the wide shot of the tank.
       tl.fromTo(
         ".hero-camera",
         { scale: 1.9, svgOrigin: "500 360" },
@@ -77,19 +70,14 @@ export default function Hero() {
         0
       );
 
-      // The drop accelerates under gravity (power2.in) towards the milk
-      // surface at y≈645, stretching slightly as it gains speed.
       tl.to(".hero-drop", { y: 298, duration: 0.42, ease: "power2.in" }, 0.03);
       tl.to(".hero-drop-shape", { scaleY: 1.22, scaleX: 0.88, transformOrigin: "50% 0%", duration: 0.3 }, 0.08);
-
-      // Impact: squash and vanish into the surface.
       tl.to(
         ".hero-drop-shape",
         { scaleY: 0.18, scaleX: 1.7, autoAlpha: 0, transformOrigin: "50% 100%", duration: 0.04 },
         0.45
       );
 
-      // Crown splash bursting out of the tank mouth.
       tl.fromTo(
         ".hero-splash",
         { x: 0, y: 0, autoAlpha: 0, scale: 0.4 },
@@ -104,9 +92,8 @@ export default function Hero() {
         },
         0.45
       );
-      tl.to(".hero-splash", { y: "+=60", autoAlpha: 0, duration: 0.08, ease: "power1.in" }, 0.53);
+      tl.to(".hero-splash", { y: "+=62", autoAlpha: 0, duration: 0.08, ease: "power1.in" }, 0.53);
 
-      // Concentric ripples spreading across the milk surface.
       tl.fromTo(
         ".hero-ripple",
         { scale: 0.08, autoAlpha: 0.9, svgOrigin: "500 645" },
@@ -114,14 +101,12 @@ export default function Hero() {
         0.455
       );
 
-      // The surface itself shivers from the impact.
       tl.to(
         ".hero-surface",
         { scaleY: 0.82, svgOrigin: "500 645", duration: 0.035, repeat: 5, yoyo: true, ease: "sine.inOut" },
         0.45
       );
 
-      // Headline rises word by word out of masked line boxes.
       tl.fromTo(
         ".hero-word",
         { yPercent: 130 },
@@ -131,7 +116,6 @@ export default function Hero() {
       tl.fromTo(".hero-sub", { y: 36, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.12 }, 0.74);
       tl.fromTo(".hero-ctas", { y: 28, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.12 }, 0.82);
 
-      // Brief hold so the finished frame breathes before the next section.
       tl.to({}, { duration: 0.06 });
     }, section);
 
@@ -146,10 +130,9 @@ export default function Hero() {
       className={`relative ${reduced ? "h-screen" : "h-[320vh]"}`}
     >
       <div className="sticky top-0 grain h-screen overflow-hidden bg-gradient-to-b from-deep-950 via-deep-900 to-deep-800">
-        {/* Ambient glow behind the tank */}
+        {/* Ambient glow */}
         <div className="absolute left-1/2 top-2/3 h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/3 rounded-full bg-deep-500/20 blur-[120px]" />
 
-        {/* Floating dust motes for depth */}
         {DUST.map((d, i) => (
           <span
             key={i}
@@ -159,7 +142,7 @@ export default function Hero() {
           />
         ))}
 
-        {/* ——— The scene: drop, tank, ripples (one SVG = exact alignment) ——— */}
+        {/* ——— The scene: wooden dairy bucket + milk drop ——— */}
         <svg
           viewBox="0 0 1000 1000"
           preserveAspectRatio="xMidYMid slice"
@@ -167,93 +150,287 @@ export default function Hero() {
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stopColor="#5B6B7C" />
-              <stop offset="0.18" stopColor="#9FB0C0" />
-              <stop offset="0.42" stopColor="#E6EDF3" />
-              <stop offset="0.6" stopColor="#AEBDCB" />
-              <stop offset="0.82" stopColor="#6E7E8F" />
-              <stop offset="1" stopColor="#46566A" />
+            {/* ─── FILTERS ─────────────────────────────────────── */}
+
+            {/* Wood grain: low X / high Y fractalNoise painted as warm browns */}
+            <filter id="f-wood" x="-4%" y="-4%" width="108%" height="108%"
+                    colorInterpolationFilters="linearRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.005 0.16"
+                            numOctaves="4" seed="9" result="wn"/>
+              <feColorMatrix
+                values="0.42 0 0 0 0.32  0.18 0 0 0 0.14  0 0 0 0 0.04  0 0 0 1 0"
+                in="wn" result="wc"/>
+              <feBlend in="SourceGraphic" in2="wc" mode="overlay" result="bl"/>
+              <feComposite in="bl" in2="SourceGraphic" operator="in"/>
+            </filter>
+
+            {/* Brushed metal: high-X noise → subtle grey streaks */}
+            <filter id="f-metal" x="-4%" y="-4%" width="108%" height="108%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.65 0.02"
+                            numOctaves="2" seed="4" result="mn"/>
+              <feColorMatrix type="saturate" values="0" in="mn" result="mg"/>
+              <feBlend in="SourceGraphic" in2="mg" mode="soft-light" result="bl"/>
+              <feComposite in="bl" in2="SourceGraphic" operator="in"/>
+            </filter>
+
+            {/* Milk drop: specular lighting for glass-liquid look */}
+            <filter id="f-drop" x="-38%" y="-38%" width="176%" height="176%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b"/>
+              <feSpecularLighting in="b" surfaceScale="6" specularConstant="1.6"
+                                  specularExponent="28" lightingColor="white" result="sp">
+                <fePointLight x="390" y="230" z="220"/>
+              </feSpecularLighting>
+              <feComposite in="sp" in2="SourceAlpha" operator="in" result="spc"/>
+              <feBlend in="SourceGraphic" in2="spc" mode="screen"/>
+            </filter>
+
+            {/* ─── GRADIENTS ───────────────────────────────────── */}
+
+            {/* Bucket wood body: dark sides → warm amber centre (horizontal) */}
+            <linearGradient id="lg-wood" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="#3C1500"/>
+              <stop offset="8%"   stopColor="#6B2D0A"/>
+              <stop offset="20%"  stopColor="#924A18"/>
+              <stop offset="38%"  stopColor="#B96820"/>
+              <stop offset="50%"  stopColor="#CE7A2C"/>
+              <stop offset="62%"  stopColor="#B96820"/>
+              <stop offset="80%"  stopColor="#924A18"/>
+              <stop offset="92%"  stopColor="#6B2D0A"/>
+              <stop offset="100%" stopColor="#3C1500"/>
             </linearGradient>
-            <linearGradient id="steelRim" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stopColor="#7C8C9D" />
-              <stop offset="0.5" stopColor="#F2F6FA" />
-              <stop offset="1" stopColor="#5B6B7C" />
+
+            {/* Vertical wood shading overlay */}
+            <linearGradient id="lg-wood-v" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor="#CC7A2C"/>
+              <stop offset="40%"  stopColor="#B06018"/>
+              <stop offset="100%" stopColor="#7A3A0A"/>
             </linearGradient>
-            <radialGradient id="milkPool" cx="0.5" cy="0.42" r="0.75">
-              <stop offset="0" stopColor="#FFFFFF" />
-              <stop offset="0.75" stopColor="#F2F2EE" />
-              <stop offset="1" stopColor="#DDE2E3" />
+
+            {/* Top rim face (cross-section seen from above) */}
+            <radialGradient id="rg-rim" cx="50%" cy="50%" r="55%">
+              <stop offset="0%"   stopColor="#D07C30"/>
+              <stop offset="55%"  stopColor="#924A18"/>
+              <stop offset="100%" stopColor="#5A2608"/>
             </radialGradient>
-            <linearGradient id="dropGrad" x1="0.3" y1="0" x2="0.7" y2="1">
-              <stop offset="0" stopColor="#FFFFFF" />
-              <stop offset="1" stopColor="#D8E2EA" />
+
+            {/* Metal hoop: dark steel → bright silver highlight → dark */}
+            <linearGradient id="lg-hoop" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="#1C2A38"/>
+              <stop offset="8%"   stopColor="#3C5268"/>
+              <stop offset="22%"  stopColor="#7C9AB4"/>
+              <stop offset="38%"  stopColor="#CDD9E4"/>
+              <stop offset="50%"  stopColor="#EBF3F8"/>
+              <stop offset="62%"  stopColor="#C5D4E2"/>
+              <stop offset="78%"  stopColor="#748FA8"/>
+              <stop offset="92%"  stopColor="#344858"/>
+              <stop offset="100%" stopColor="#1C2A38"/>
             </linearGradient>
+
+            {/* Bucket interior shadow (dark inside, viewed through rim) */}
+            <radialGradient id="rg-int" cx="50%" cy="18%" r="82%">
+              <stop offset="0%"   stopColor="#1A2E40" stopOpacity="0.95"/>
+              <stop offset="55%"  stopColor="#0C1C2C" stopOpacity="0.98"/>
+              <stop offset="100%" stopColor="#06101A" stopOpacity="1"/>
+            </radialGradient>
+
+            {/* Milk pool: white with subtle blue-grey depth at edges */}
+            <radialGradient id="rg-milk" cx="48%" cy="38%" r="70%">
+              <stop offset="0%"   stopColor="#FFFFFF"/>
+              <stop offset="40%"  stopColor="#F6FAFC"/>
+              <stop offset="80%"  stopColor="#E8EFF3"/>
+              <stop offset="100%" stopColor="#D4E2E8"/>
+            </radialGradient>
+
+            {/* Iron bail handle */}
+            <linearGradient id="lg-bail" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor="#7C8A98"/>
+              <stop offset="35%"  stopColor="#A8B8C8"/>
+              <stop offset="55%"  stopColor="#C5D2DC"/>
+              <stop offset="100%" stopColor="#4A5868"/>
+            </linearGradient>
+
+            {/* Milk drop: glass-liquid radial — white core → blue-grey edge */}
+            <radialGradient id="rg-drop" cx="28%" cy="22%" r="75%">
+              <stop offset="0%"   stopColor="#FFFFFF"/>
+              <stop offset="16%"  stopColor="#F2F9FF"/>
+              <stop offset="42%"  stopColor="#D6ECF8"/>
+              <stop offset="72%"  stopColor="#A8CDE0"/>
+              <stop offset="100%" stopColor="#72A8C0"/>
+            </radialGradient>
+
+            {/* Drop caustic inner glow (bottom-centre bright spot) */}
+            <radialGradient id="rg-drop-c" cx="52%" cy="66%" r="36%">
+              <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.65"/>
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0"/>
+            </radialGradient>
+
+            {/* Warm milk tint at drop base */}
+            <radialGradient id="rg-drop-warm" cx="50%" cy="82%" r="42%">
+              <stop offset="0%"   stopColor="#FFF5E8" stopOpacity="0.18"/>
+              <stop offset="100%" stopColor="#FFF5E8" stopOpacity="0"/>
+            </radialGradient>
+
+            {/* ─── CLIP PATH ───────────────────────────────────── */}
+            <clipPath id="cp-drop">
+              <path d="M0,-56 C18,-28 36,-4 36,20 A36,36 0 1 1 -36,20 C-36,-4 -18,-28 0,-56 Z"/>
+            </clipPath>
           </defs>
 
           <g className="hero-camera">
-            {/* Collection tank */}
-            <g>
-              {/* legs */}
-              <rect x="305" y="930" width="22" height="60" rx="6" fill="#33414F" />
-              <rect x="673" y="930" width="22" height="60" rx="6" fill="#33414F" />
-              {/* body */}
-              <path
-                d="M270 645 L270 900 Q270 960 330 960 L670 960 Q730 960 730 900 L730 645 Z"
-                fill="url(#steel)"
-              />
-              {/* polished band details */}
-              <rect x="270" y="700" width="460" height="10" fill="#FFFFFF" opacity="0.12" />
-              <rect x="270" y="850" width="460" height="10" fill="#0A2E52" opacity="0.14" />
-              <rect x="300" y="660" width="8" height="280" rx="4" fill="#FFFFFF" opacity="0.35" />
-              {/* outlet valve */}
-              <rect x="724" y="800" width="46" height="16" rx="8" fill="#46566A" />
-              <circle cx="778" cy="808" r="13" fill="#9FB0C0" />
-              {/* rim */}
-              <ellipse cx="500" cy="645" rx="232" ry="42" fill="url(#steelRim)" />
-              {/* milk surface */}
-              <ellipse className="hero-surface" cx="500" cy="645" rx="206" ry="32" fill="url(#milkPool)" />
-            </g>
 
-            {/* Impact ripples (scrub-animated) */}
+            {/* ═══════ WOODEN DAIRY BUCKET ═══════ */}
+
+            {/* Ground shadow */}
+            <ellipse cx="500" cy="908" rx="192" ry="27" fill="#000A18" opacity="0.52"/>
+
+            {/* Iron bail (handle arch behind bucket) */}
+            <path d="M320 592 A192 88 0 0 1 680 592"
+                  fill="none" stroke="url(#lg-bail)" strokeWidth="16"
+                  strokeLinecap="round"/>
+            {/* Highlight on bail top */}
+            <path d="M320 592 A192 88 0 0 1 680 592"
+                  fill="none" stroke="#C5D2DC" strokeWidth="4"
+                  strokeLinecap="round" opacity="0.45"/>
+            {/* Bail attachment rings */}
+            <circle cx="312" cy="592" r="12" fill="#4A5868"/>
+            <circle cx="312" cy="592" r="6"  fill="#2E3A48"/>
+            <circle cx="688" cy="592" r="12" fill="#4A5868"/>
+            <circle cx="688" cy="592" r="6"  fill="#2E3A48"/>
+
+            {/* Main wood body */}
+            <path d="M302 596 L698 596 L650 882 L350 882 Z"
+                  fill="url(#lg-wood)" filter="url(#f-wood)"/>
+
+            {/* Vertical shading overlay (darker at top, darker at base) */}
+            <path d="M302 596 L698 596 L650 882 L350 882 Z"
+                  fill="url(#lg-wood-v)" opacity="0.32"/>
+
+            {/* Stave divider lines (7 lines → 8 staves) */}
+            {Array.from({ length: 7 }, (_, i) => {
+              const f = (i + 1) / 8;
+              const tx = 302 + f * 396;
+              const bx = 350 + f * 300;
+              return (
+                <line key={i} x1={tx} y1={596} x2={bx} y2={882}
+                      stroke="#3A1800" strokeWidth="1.5" opacity="0.42"/>
+              );
+            })}
+
+            {/* Left-edge shadow (cylindrical illusion) */}
+            <path d="M302 596 L342 596 L356 882 L350 882 Z"
+                  fill="#180800" opacity="0.52"/>
+            {/* Right-edge shadow */}
+            <path d="M658 596 L698 596 L650 882 L644 882 Z"
+                  fill="#180800" opacity="0.52"/>
+            {/* Centre highlight stripe */}
+            <path d="M460 596 L540 596 L528 882 L472 882 Z"
+                  fill="#FFFFFF" opacity="0.045"/>
+
+            {/* ── METAL HOOPS ── */}
+
+            {/* Top hoop  y≈600 */}
+            <path d="M300 598 L700 598 L700 616 L300 616 Z"
+                  fill="url(#lg-hoop)" filter="url(#f-metal)"/>
+            <line x1="300" y1="599" x2="700" y2="599"
+                  stroke="#FFFFFF" strokeWidth="1.5" opacity="0.28"/>
+            {[348, 500, 652].map((cx) => (
+              <circle key={cx} cx={cx} cy="607" r="5"
+                      fill="#2A3A4A" stroke="#1A2A3A" strokeWidth="1"/>
+            ))}
+
+            {/* Middle hoop  y≈714 (42% down the 286px height) */}
+            <path d="M313 712 L687 712 L683 728 L317 728 Z"
+                  fill="url(#lg-hoop)" filter="url(#f-metal)"/>
+            <line x1="313" y1="713" x2="687" y2="713"
+                  stroke="#FFFFFF" strokeWidth="1.5" opacity="0.28"/>
+            {[362, 500, 638].map((cx) => (
+              <circle key={cx} cx={cx} cy="720" r="4.5"
+                      fill="#2A3A4A" stroke="#1A2A3A" strokeWidth="1"/>
+            ))}
+
+            {/* Lower hoop  y≈807 (74% down) */}
+            <path d="M330 805 L670 805 L666 820 L334 820 Z"
+                  fill="url(#lg-hoop)" filter="url(#f-metal)"/>
+            <line x1="330" y1="806" x2="670" y2="806"
+                  stroke="#FFFFFF" strokeWidth="1.5" opacity="0.28"/>
+            {[378, 500, 622].map((cx) => (
+              <circle key={cx} cx={cx} cy="812" r="4"
+                      fill="#2A3A4A" stroke="#1A2A3A" strokeWidth="1"/>
+            ))}
+
+            {/* Bottom disc */}
+            <ellipse cx="500" cy="882" rx="150" ry="26" fill="#2C1200"/>
+            <ellipse cx="500" cy="882" rx="140" ry="21" fill="#5A2608"/>
+
+            {/* ── TOP RIM (wood face, 3-D perspective) ── */}
+
+            {/* Outer rim ellipse */}
+            <ellipse cx="500" cy="596" rx="200" ry="44" fill="url(#rg-rim)"/>
+            <ellipse cx="500" cy="596" rx="200" ry="44" fill="none"
+                     stroke="#5A2608" strokeWidth="2.5" opacity="0.65"/>
+
+            {/* Inner rim — shows depth and bucket interior */}
+            <ellipse cx="500" cy="596" rx="185" ry="36" fill="url(#rg-int)"/>
+
+            {/* Milk surface (GSAP target: .hero-surface) */}
+            <ellipse className="hero-surface"
+                     cx="500" cy="645" rx="178" ry="28" fill="url(#rg-milk)"/>
+
+            {/* Caustic light patches on milk */}
+            <ellipse cx="472" cy="640" rx="33" ry="10" fill="#FFFFFF" opacity="0.17"/>
+            <ellipse cx="528" cy="649" rx="20" ry="7"  fill="#FFFFFF" opacity="0.12"/>
+
+            {/* ── RIPPLES (GSAP-animated) ── */}
             {[0, 1, 2, 3].map((i) => (
-              <ellipse
-                key={i}
-                className="hero-ripple"
-                cx="500"
-                cy="645"
-                rx={60 + i * 46}
-                ry={(60 + i * 46) * 0.15}
-                fill="none"
-                stroke="#FFFFFF"
-                strokeWidth={3 - i * 0.5}
-                opacity="0"
-              />
+              <ellipse key={i} className="hero-ripple"
+                cx="500" cy="645"
+                rx={52 + i * 38} ry={(52 + i * 38) * 0.157}
+                fill="none" stroke="#FFFFFF"
+                strokeWidth={2.4 - i * 0.4} opacity="0"/>
             ))}
 
-            {/* Splash droplets (scrub-animated) */}
+            {/* ── SPLASH DROPLETS (GSAP-animated) ── */}
             {SPLASH.map((s, i) => (
-              <circle key={i} className="hero-splash" cx="500" cy="632" r={s.r} fill="#FFFFFF" opacity="0" />
+              <circle key={i} className="hero-splash"
+                cx="500" cy="632" r={s.r}
+                fill="#EEF6FF" opacity="0"/>
             ))}
 
-            {/* The milk drop, suspended at y=330 before the user scrolls */}
+            {/* ═══════ PHOTO-REALISTIC MILK DROP ═══════ */}
             <g className="hero-drop" transform="translate(500 330)">
-              <g className="hero-drop-shape">
-                <path
-                  d="M0 -52 C 14 -26 30 -8 30 14 A 30 30 0 1 1 -30 14 C -30 -8 -14 -26 0 -52 Z"
-                  fill="url(#dropGrad)"
-                />
-                {/* specular highlight */}
-                <path
-                  d="M-12 2 C -14 12 -10 22 -2 26"
-                  stroke="#FFFFFF"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  fill="none"
-                  opacity="0.85"
-                />
+              <g className="hero-drop-shape" filter="url(#f-drop)">
+                {/* Drop ambient shadow */}
+                <ellipse cx="5" cy="28" rx="24" ry="7"
+                         fill="#000A1E" opacity="0.2"/>
+
+                {/* Main body — multi-layer glass depth */}
+                <path d="M0,-56 C18,-28 36,-4 36,20 A36,36 0 1 1 -36,20 C-36,-4 -18,-28 0,-56 Z"
+                      fill="url(#rg-drop)"/>
+
+                {/* Caustic inner reflection */}
+                <path d="M0,-56 C18,-28 36,-4 36,20 A36,36 0 1 1 -36,20 C-36,-4 -18,-28 0,-56 Z"
+                      fill="url(#rg-drop-c)" clipPath="url(#cp-drop)"/>
+
+                {/* Warm milk tint at base */}
+                <path d="M0,-56 C18,-28 36,-4 36,20 A36,36 0 1 1 -36,20 C-36,-4 -18,-28 0,-56 Z"
+                      fill="url(#rg-drop-warm)"/>
+
+                {/* Outer glass-edge rim */}
+                <path d="M0,-56 C18,-28 36,-4 36,20 A36,36 0 1 1 -36,20 C-36,-4 -18,-28 0,-56 Z"
+                      fill="none" stroke="#FFFFFF" strokeWidth="2" opacity="0.2"/>
+
+                {/* Primary specular arc (upper-left) */}
+                <path d="M-19,-18 C-23,-6 -19,6 -11,12"
+                      stroke="#FFFFFF" strokeWidth="7.5"
+                      strokeLinecap="round" fill="none" opacity="0.92"/>
+
+                {/* Secondary specular (near tip) */}
+                <path d="M-8,-38 C-10,-30 -8,-23 -4,-18"
+                      stroke="#FFFFFF" strokeWidth="3.5"
+                      strokeLinecap="round" fill="none" opacity="0.75"/>
               </g>
             </g>
+
           </g>
         </svg>
 

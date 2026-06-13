@@ -226,28 +226,112 @@ export default function StageSprayDrying() {
           <div className="relative order-1 mx-auto h-[52vh] w-full max-w-[420px] lg:order-2 lg:h-[68vh]">
             <svg viewBox="0 0 420 720" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
               <defs>
+                {/* Chamber wall: dark metallic sides, transparent centre for the canvas */}
                 <linearGradient id="s5-wall" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0" stopColor="#123A66" stopOpacity="0.55" />
-                  <stop offset="0.5" stopColor="#0A2E52" stopOpacity="0.18" />
-                  <stop offset="1" stopColor="#123A66" stopOpacity="0.55" />
+                  <stop offset="0%"   stopColor="#0E2A48" stopOpacity="0.88"/>
+                  <stop offset="18%"  stopColor="#1A4070" stopOpacity="0.55"/>
+                  <stop offset="40%"  stopColor="#1E4878" stopOpacity="0.12"/>
+                  <stop offset="60%"  stopColor="#1E4878" stopOpacity="0.12"/>
+                  <stop offset="82%"  stopColor="#1A4070" stopOpacity="0.55"/>
+                  <stop offset="100%" stopColor="#0E2A48" stopOpacity="0.88"/>
+                </linearGradient>
+                {/* Hot-air inlet glow */}
+                <radialGradient id="s5-airglow" cx="0%" cy="50%" r="100%">
+                  <stop offset="0%"   stopColor="#E0901A" stopOpacity="0.7"/>
+                  <stop offset="100%" stopColor="#C07010" stopOpacity="0"/>
+                </radialGradient>
+                <radialGradient id="s5-airglow-r" cx="100%" cy="50%" r="100%">
+                  <stop offset="0%"   stopColor="#E0901A" stopOpacity="0.7"/>
+                  <stop offset="100%" stopColor="#C07010" stopOpacity="0"/>
+                </radialGradient>
+                {/* Feed pipe gradient */}
+                <linearGradient id="s5-pipe" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%"   stopColor="#1A3A60"/>
+                  <stop offset="35%"  stopColor="#3A6898"/>
+                  <stop offset="65%"  stopColor="#4878A8"/>
+                  <stop offset="100%" stopColor="#1A3A60"/>
                 </linearGradient>
               </defs>
-              {/* chamber */}
-              <path
-                d="M40 60 H380 V520 L240 660 H180 L40 520 Z"
-                fill="url(#s5-wall)"
-                stroke="#4F86C0"
-                strokeWidth="2.5"
-                strokeOpacity="0.7"
-              />
-              {/* feed pipe + nozzle */}
-              <rect x="196" y="6" width="28" height="44" rx="6" fill="#123A66" stroke="#4F86C0" strokeWidth="2" />
-              <path d="M190 50 h40 l-8 18 h-24 Z" fill="#4F86C0" />
-              {/* hot-air inlets */}
-              <path d="M2 140 h38 M2 200 h38" stroke="#C9A96A" strokeWidth="3" strokeDasharray="6 6" className="flow-dash-slow" fill="none" />
-              <path d="M380 140 h38 M380 200 h38" stroke="#C9A96A" strokeWidth="3" strokeDasharray="6 6" className="flow-dash-slow" fill="none" />
-              {/* outlet duct */}
-              <rect x="186" y="660" width="48" height="46" rx="8" fill="#123A66" stroke="#4F86C0" strokeWidth="2" />
+
+              {/* Tower structure support legs */}
+              <rect x="40"  y="558" width="14" height="120" rx="7" fill="#1A3050"/>
+              <rect x="366" y="558" width="14" height="120" rx="7" fill="#1A3050"/>
+              {/* Cross brace */}
+              <line x1="54" y1="628" x2="366" y2="628" stroke="#1A3050" strokeWidth="6" strokeLinecap="round"/>
+
+              {/* Chamber body */}
+              <path d="M40 60 H380 V520 L240 660 H180 L40 520 Z"
+                    fill="url(#s5-wall)"/>
+
+              {/* Chamber outer wall stroke */}
+              <path d="M40 60 H380 V520 L240 660 H180 L40 520 Z"
+                    fill="none" stroke="#4F86C0" strokeWidth="2.5" strokeOpacity="0.7"/>
+
+              {/* Panel weld seams (horizontal) */}
+              {[160, 260, 380, 480].map((wy) => (
+                <line key={wy} x1="40" y1={wy} x2="380" y2={wy}
+                      stroke="#3A6898" strokeWidth="1.5" opacity="0.4"/>
+              ))}
+
+              {/* Rivet lines along left and right sides */}
+              {[100, 160, 220, 280, 340, 400, 460].map((ry) => (
+                <g key={ry}>
+                  <circle cx="46"  cy={ry} r="3.5" fill="#3A6080" opacity="0.6"/>
+                  <circle cx="374" cy={ry} r="3.5" fill="#3A6080" opacity="0.6"/>
+                </g>
+              ))}
+
+              {/* Inspection windows */}
+              <ellipse cx="86" cy="300" rx="22" ry="28" fill="#0A1A2E" stroke="#4070A8" strokeWidth="2"/>
+              <ellipse cx="86" cy="300" rx="16" ry="21" fill="#0E2040" opacity="0.9"/>
+              <ellipse cx="82" cy="294" rx="7"  ry="9"  fill="#FFFFFF" opacity="0.06"/>
+              <ellipse cx="334" cy="300" rx="22" ry="28" fill="#0A1A2E" stroke="#4070A8" strokeWidth="2"/>
+              <ellipse cx="334" cy="300" rx="16" ry="21" fill="#0E2040" opacity="0.9"/>
+
+              {/* Hot-air inlets LEFT — with amber glow */}
+              <rect x="2" y="128" width="42" height="28" rx="8" fill="url(#s5-airglow)"/>
+              <rect x="2" y="188" width="42" height="28" rx="8" fill="url(#s5-airglow)"/>
+              <path d="M2 140 h38 M2 200 h38"
+                    stroke="#C9A96A" strokeWidth="3" strokeDasharray="6 6"
+                    className="flow-dash-slow" fill="none"/>
+              {/* Duct labels */}
+              <text x="10" y="126" fontSize="9" fill="#C9A96A" opacity="0.7" letterSpacing="1">HOT</text>
+              <text x="10" y="186" fontSize="9" fill="#C9A96A" opacity="0.7" letterSpacing="1">AIR</text>
+
+              {/* Hot-air inlets RIGHT */}
+              <rect x="376" y="128" width="42" height="28" rx="8" fill="url(#s5-airglow-r)"/>
+              <rect x="376" y="188" width="42" height="28" rx="8" fill="url(#s5-airglow-r)"/>
+              <path d="M380 140 h38 M380 200 h38"
+                    stroke="#C9A96A" strokeWidth="3" strokeDasharray="6 6"
+                    className="flow-dash-slow" fill="none"/>
+
+              {/* Feed pipe (top) */}
+              <rect x="193" y="4" width="34" height="50" rx="10"
+                    fill="url(#s5-pipe)" stroke="#4070A0" strokeWidth="2"/>
+              {/* Pipe highlight */}
+              <rect x="197" y="6" width="10" height="44" rx="5" fill="#FFFFFF" opacity="0.14"/>
+              {/* Pipe flanges */}
+              <rect x="186" y="8"  width="48" height="10" rx="5" fill="#3A6090"/>
+              <rect x="186" y="36" width="48" height="10" rx="5" fill="#3A6090"/>
+              {/* Pressure gauge */}
+              <circle cx="172" cy="28" r="14" fill="#0A1E30" stroke="#3A6090" strokeWidth="1.5"/>
+              <circle cx="172" cy="28" r="10" fill="#0E2848"/>
+              <line x1="172" y1="28" x2="172" y2="20" stroke="#C9A96A" strokeWidth="2" strokeLinecap="round"/>
+
+              {/* Nozzle assembly */}
+              <path d="M186 54 h48 l-10 22 h-28 Z" fill="#4878A8" stroke="#3A6090" strokeWidth="1.5"/>
+              <rect x="200" y="74" width="20" height="8" rx="4" fill="#3A6090"/>
+              <circle cx="210" cy="76" r="5" fill="#6090C0"/>
+
+              {/* Outlet cyclone at bottom */}
+              <rect x="183" y="660" width="54" height="52" rx="10"
+                    fill="#0E2848" stroke="#4070A0" strokeWidth="2"/>
+              <rect x="187" y="662" width="46" height="16" rx="6" fill="#1A3A60"/>
+              {/* Cyclone swirl indicator */}
+              <path d="M190 680 Q210 672 230 682 Q218 694 200 688 Q188 684 190 680 Z"
+                    fill="none" stroke="#4878A8" strokeWidth="1.5" opacity="0.6"/>
+              {/* Outlet pipe below */}
+              <rect x="198" y="710" width="24" height="10" rx="5" fill="#0E2848" stroke="#3A6090" strokeWidth="1.5"/>
             </svg>
 
             {/* particle field clipped to the chamber interior */}

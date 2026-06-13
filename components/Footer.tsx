@@ -18,9 +18,11 @@ export default function Footer() {
           {/* brand */}
           <div>
             <a href="#top" aria-label="Belalak Milk — back to top" className="inline-block">
-              <span className="inline-flex items-center rounded-2xl bg-white px-4 py-3 shadow-sm">
-                <Image src={logo} alt="Belalak Milk" className="h-14 w-auto" />
-              </span>
+              <Image
+                src={logo}
+                alt="Belalak Milk"
+                className="h-14 w-auto drop-shadow-[0_2px_12px_rgba(255,247,232,0.35)]"
+              />
             </a>
             <p className="mt-5 max-w-sm text-sm leading-relaxed">
               Premium milk powder supplier sourcing and manufacturing in the Republic of
