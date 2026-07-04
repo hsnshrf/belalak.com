@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Env — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# Flutter / Dart
+apps/mobile/.dart_tool/
+apps/mobile/build/
+apps/mobile/.flutter-plugins*
+apps/mobile/.packages
+apps/mobile/pubspec.lock
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store

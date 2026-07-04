@@ -1,0 +1,760 @@
+openapi: 3.1.0
+info:
+  title: VoiceVault API
+  version: 0.1.0
+  description: >
+    Contract-first API for VoiceVault. apps/api implements this spec; apps/web
+    and apps/mobile consume it. Types in packages/shared/src/schemas.ts mirror
+    the component schemas below — change both together.
+servers:
+  - url: http://localhost:4000
+security:
+  - bearerAuth: []
+
+paths:
+  # ── Auth ────────────────────────────────────────────────────────────────────
+  /v1/auth/signup:
+    post:
+      security: []
+      summary: Create an account with email + password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SignupInput" }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+        "409": { description: Email already registered }
+  /v1/auth/login:
+    post:
+      security: []
+      summary: Email + password login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+        "401": { description: Invalid credentials }
+  /v1/auth/refresh:
+    post:
+      security: []
+      summary: Exchange a refresh token for a new access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: New token pair
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthTokens" }
+  /v1/auth/oauth/{provider}/start:
+    get:
+      security: []
+      summary: Begin OAuth flow (redirects to the provider)
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema: { type: string, enum: [google, microsoft, apple] }
+      responses:
+        "302": { description: Redirect to provider consent screen }
+  /v1/auth/oauth/{provider}/callback:
+    get:
+      security: []
+      summary: OAuth redirect URI — exchanges code, issues tokens
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema: { type: string, enum: [google, microsoft, apple] }
+        - { name: code, in: query, required: true, schema: { type: string } }
+        - { name: state, in: query, required: true, schema: { type: string } }
+      responses:
+        "302": { description: Redirect back to the app with tokens }
+
+  # ── Recordings ──────────────────────────────────────────────────────────────
+  /v1/recordings:
+    get:
+      summary: List recordings (library view)
+      parameters:
+        - { name: folderId, in: query, schema: { type: string, format: uuid } }
+        - { name: categoryId, in: query, schema: { type: string, format: uuid } }
+        - { name: view, in: query, schema: { type: string, enum: [all, favorites, archived, trash] } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+      responses:
+        "200":
+          description: Page of recordings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Recording" }
+                  total: { type: integer }
+    post:
+      summary: Create a recording record (before/while audio uploads)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRecordingInput" }
+      responses:
+        "201":
+          description: Created (idempotent on clientId — returns the existing row)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Recording" }
+  /v1/recordings/{id}:
+    get:
+      summary: Fetch one recording with transcript + speakers + signed audio URL
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      responses:
+        "200":
+          description: Recording detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecordingDetail" }
+        "404": { description: Not found }
+    patch:
+      summary: Update metadata (title, folder, category, tags, favorite, archive)
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateRecordingInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Recording" }
+    delete:
+      summary: Move to trash (30-day retention)
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      responses:
+        "204": { description: Trashed }
+  /v1/recordings/{id}/restore:
+    post:
+      summary: Restore from trash
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      responses:
+        "200": { description: Restored }
+  /v1/recordings/{id}/purge:
+    delete:
+      summary: Permanently delete (requires confirm=true; irreversible)
+      parameters:
+        - { $ref: "#/components/parameters/RecordingId" }
+        - { name: confirm, in: query, required: true, schema: { type: boolean } }
+      responses:
+        "204": { description: Permanently deleted }
+        "400": { description: confirm=true missing }
+
+  # ── Chunked upload ──────────────────────────────────────────────────────────
+  /v1/uploads/sessions:
+    post:
+      summary: Open a chunked upload session for a recording
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OpenUploadSessionInput" }
+      responses:
+        "201":
+          description: Session opened
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionId]
+                properties:
+                  sessionId: { type: string, format: uuid }
+  /v1/uploads/sessions/{sessionId}/chunks/{seq}:
+    put:
+      summary: Upload one audio chunk (idempotent per seq; body is raw bytes)
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: seq, in: path, required: true, schema: { type: integer, minimum: 0 } }
+        - { name: x-chunk-sha256, in: header, required: true, schema: { type: string } }
+        - { name: x-chunk-is-last, in: header, schema: { type: boolean } }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "200": { description: Chunk stored (or already stored) }
+        "409": { description: Checksum mismatch — retry the chunk }
+  /v1/uploads/sessions/{sessionId}/complete:
+    post:
+      summary: Assemble chunks, finalize audio object, enqueue transcription
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Assembled; transcription job queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recordingId: { type: string, format: uuid }
+                  missingChunks:
+                    type: array
+                    items: { type: integer }
+        "409": { description: Missing chunks — response lists which }
+
+  # ── Transcription ───────────────────────────────────────────────────────────
+  /v1/recordings/{id}/transcription:
+    get:
+      summary: Job status (queued → processing → done → failed)
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      responses:
+        "200":
+          description: Current job state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranscriptionJob" }
+    post:
+      summary: (Re)queue transcription — also used for retry after failure
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider: { type: string, enum: [whisper_api, deepgram, local_whisper] }
+      responses:
+        "202": { description: Queued }
+  /v1/recordings/{id}/transcript:
+    patch:
+      summary: Save user edits (original transcript is immutable; edits versioned separately)
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [segments]
+              properties:
+                segments:
+                  type: array
+                  items: { $ref: "#/components/schemas/TranscriptSegment" }
+      responses:
+        "200":
+          description: Edited transcript saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transcript" }
+  /v1/recordings/{id}/speakers/{speakerId}:
+    patch:
+      summary: Rename a diarized speaker (persisted)
+      parameters:
+        - { $ref: "#/components/parameters/RecordingId" }
+        - { name: speakerId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName: { type: string, maxLength: 120 }
+      responses:
+        "200": { description: Renamed }
+
+  # ── AI post-processing ──────────────────────────────────────────────────────
+  /v1/recordings/{id}/ai/{kind}:
+    post:
+      summary: Generate summary / action items / key topics / tag suggestions on demand
+      parameters:
+        - { $ref: "#/components/parameters/RecordingId" }
+        - name: kind
+          in: path
+          required: true
+          schema: { type: string, enum: [summary, action_items, key_topics, tag_suggestions, category_suggestion] }
+      responses:
+        "200":
+          description: Generated artifact (stored with the recording)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiArtifact" }
+
+  # ── Search ──────────────────────────────────────────────────────────────────
+  /v1/search:
+    post:
+      summary: Full-text search across transcripts, titles, tags, speaker names
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SearchRequest" }
+      responses:
+        "200":
+          description: Ranked results with per-match audio timestamps
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/SearchResult" }
+                  total: { type: integer }
+
+  # ── Organization ────────────────────────────────────────────────────────────
+  /v1/folders:
+    get:
+      summary: List folders (tree)
+      responses:
+        "200":
+          description: All folders for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Folder" }
+    post:
+      summary: Create folder (nested via parentId)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                parentId: { type: string, format: uuid, nullable: true }
+      responses:
+        "201": { description: Created }
+  /v1/folders/{id}:
+    patch:
+      summary: Rename / move folder
+      parameters: [{ $ref: "#/components/parameters/GenericId" }]
+      responses: { "200": { description: Updated } }
+    delete:
+      summary: Delete folder (recordings move to parent or root)
+      parameters: [{ $ref: "#/components/parameters/GenericId" }]
+      responses: { "204": { description: Deleted } }
+  /v1/categories:
+    get:
+      summary: List categories (defaults seeded per user)
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Category" }
+  /v1/tags:
+    get:
+      summary: List / autocomplete tags
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: Prefix/fuzzy filter for autocomplete }
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Tag" }
+    post:
+      summary: Create tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "201": { description: Created (idempotent on case-insensitive name) }
+
+  # ── Exports & sync ──────────────────────────────────────────────────────────
+  /v1/recordings/{id}/export:
+    post:
+      summary: Export transcript (txt/docx/pdf/srt) or get share link
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExportRequest" }
+      responses:
+        "200":
+          description: File stream (Content-Disposition attachment)
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+  /v1/recordings/{id}/share-link:
+    post:
+      summary: Create an expiring signed share URL (audio + transcript)
+      parameters: [{ $ref: "#/components/parameters/RecordingId" }]
+      responses:
+        "201":
+          description: Share link
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+                  expiresAt: { type: string, format: date-time }
+  /v1/sync/push:
+    post:
+      summary: Push offline changes (LWW merge with tombstones; see shared/src/sync.ts)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SyncPushRequest" }
+      responses:
+        "200":
+          description: Merge outcome per row
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncPushResponse" }
+  /v1/sync/pull:
+    get:
+      summary: Pull server changes since a sync cursor
+      parameters:
+        - { name: since, in: query, required: true, schema: { type: integer, description: "sync_seq cursor; 0 for full sync" } }
+      responses:
+        "200":
+          description: Changed rows (including tombstones) and the new cursor
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncPullResponse" }
+
+  # ── Account ─────────────────────────────────────────────────────────────────
+  /v1/account/usage:
+    get:
+      summary: Storage usage dashboard data
+      responses:
+        "200":
+          description: Totals per category/source and overall bytes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalBytes: { type: integer }
+                  recordingCount: { type: integer }
+  /v1/account/export:
+    post:
+      summary: Full data export (ZIP of all audio + transcripts), async job
+      responses:
+        "202": { description: Export job started; user notified with download link }
+  /v1/account:
+    delete:
+      summary: Full account deletion (GDPR-style; requires confirm=true)
+      parameters:
+        - { name: confirm, in: query, required: true, schema: { type: boolean } }
+      responses:
+        "204": { description: Account and all data scheduled for deletion }
+
+  # ── Meeting bot (phase 2 scaffold) ──────────────────────────────────────────
+  /v1/meeting-bots:
+    post:
+      summary: "[NOT IMPLEMENTED — returns 501] Request a server-side bot to join a meeting"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [meetingUrl]
+              properties:
+                meetingUrl: { type: string, format: uri }
+      responses:
+        "501": { description: Scaffold only — see docs/meeting-bot.md }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    RecordingId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    GenericId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    # NOTE: these mirror packages/shared/src/schemas.ts (zod is the source of
+    # truth for runtime validation; this spec is the wire contract).
+    SignupInput:
+      type: object
+      required: [email, password, displayName]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 10 }
+        displayName: { type: string }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    AuthTokens:
+      type: object
+      required: [accessToken, refreshToken, expiresInSeconds]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresInSeconds: { type: integer }
+    Word:
+      type: object
+      required: [w, s, e]
+      properties:
+        w: { type: string, description: The word text }
+        s: { type: number, description: Start time in seconds }
+        e: { type: number, description: End time in seconds }
+    TranscriptSegment:
+      type: object
+      required: [id, start, end, text, words]
+      properties:
+        id: { type: string }
+        start: { type: number }
+        end: { type: number }
+        speaker: { type: string, nullable: true, description: "Stable key, e.g. S1" }
+        language: { type: string, nullable: true, description: BCP-47 per-segment language }
+        text: { type: string }
+        words:
+          type: array
+          items: { $ref: "#/components/schemas/Word" }
+    Transcript:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        recordingId: { type: string, format: uuid }
+        kind: { type: string, enum: [original, edited] }
+        text: { type: string }
+        language: { type: string, nullable: true }
+        segments:
+          type: array
+          items: { $ref: "#/components/schemas/TranscriptSegment" }
+        provider: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    TranscriptionJob:
+      type: object
+      properties:
+        recordingId: { type: string, format: uuid }
+        status: { type: string, enum: [queued, processing, done, failed] }
+        provider: { type: string }
+        attempts: { type: integer }
+        lastError: { type: string, nullable: true }
+    Recording:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        folderId: { type: string, format: uuid, nullable: true }
+        categoryId: { type: string, format: uuid, nullable: true }
+        sourceType: { type: string, enum: [mic, meeting, call] }
+        captureStrategy: { type: string, enum: [mic, tab_audio, speakerphone, voice_call, meeting_bot], nullable: true }
+        status: { type: string, enum: [recording, uploading, uploaded, failed] }
+        qualityPreset: { type: string, enum: [voice, standard, high] }
+        durationSeconds: { type: number, nullable: true }
+        sizeBytes: { type: integer, nullable: true }
+        languageDominant: { type: string, nullable: true }
+        transcriptionStatus: { type: string, enum: [queued, processing, done, failed], nullable: true }
+        consentAcknowledged: { type: boolean }
+        consentAcknowledgedAt: { type: string, format: date-time, nullable: true }
+        announcementPlayed: { type: boolean }
+        isFavorite: { type: boolean }
+        archivedAt: { type: string, format: date-time, nullable: true }
+        trashedAt: { type: string, format: date-time, nullable: true }
+        recordedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        tagIds:
+          type: array
+          items: { type: string, format: uuid }
+    RecordingDetail:
+      allOf:
+        - $ref: "#/components/schemas/Recording"
+        - type: object
+          properties:
+            audioUrl: { type: string, nullable: true, description: Expiring signed URL }
+            transcript: { $ref: "#/components/schemas/Transcript" }
+            speakers:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  label: { type: string }
+                  displayName: { type: string, nullable: true }
+    CreateRecordingInput:
+      type: object
+      required: [clientId, sourceType, captureStrategy, recordedAt]
+      properties:
+        clientId: { type: string, format: uuid }
+        title: { type: string }
+        sourceType: { type: string, enum: [mic, meeting, call] }
+        captureStrategy: { type: string, enum: [mic, tab_audio, speakerphone, voice_call, meeting_bot] }
+        qualityPreset: { type: string, enum: [voice, standard, high], default: standard }
+        recordedAt: { type: string, format: date-time }
+        consentAcknowledged: { type: boolean, default: false }
+        announcementPlayed: { type: boolean, default: false }
+        folderId: { type: string, format: uuid, nullable: true }
+        categoryId: { type: string, format: uuid, nullable: true }
+    UpdateRecordingInput:
+      type: object
+      properties:
+        title: { type: string }
+        folderId: { type: string, format: uuid, nullable: true }
+        categoryId: { type: string, format: uuid, nullable: true }
+        tagIds:
+          type: array
+          items: { type: string, format: uuid }
+        isFavorite: { type: boolean }
+        archived: { type: boolean }
+    OpenUploadSessionInput:
+      type: object
+      required: [recordingId, mimeType]
+      properties:
+        recordingId: { type: string, format: uuid }
+        mimeType: { type: string }
+        totalChunks: { type: integer, nullable: true }
+    Folder:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        parentId: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Category:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        isDefault: { type: boolean }
+    Tag:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    SearchRequest:
+      type: object
+      required: [q]
+      properties:
+        q: { type: string }
+        dateFrom: { type: string, format: date-time }
+        dateTo: { type: string, format: date-time }
+        language: { type: string }
+        categoryId: { type: string, format: uuid }
+        tagIds:
+          type: array
+          items: { type: string, format: uuid }
+        folderId: { type: string, format: uuid }
+        minDurationSeconds: { type: number }
+        maxDurationSeconds: { type: number }
+        sourceType: { type: string, enum: [mic, meeting, call] }
+        limit: { type: integer, default: 20 }
+        offset: { type: integer, default: 0 }
+    SearchResult:
+      type: object
+      properties:
+        recordingId: { type: string, format: uuid }
+        title: { type: string }
+        recordedAt: { type: string, format: date-time }
+        language: { type: string, nullable: true }
+        durationSeconds: { type: number, nullable: true }
+        matches:
+          type: array
+          items:
+            type: object
+            properties:
+              timeSeconds: { type: number, nullable: true, description: Audio position of the match }
+              segmentId: { type: string, nullable: true }
+              snippetHtml: { type: string, description: Snippet with <mark> highlighting }
+    AiArtifact:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        recordingId: { type: string, format: uuid }
+        kind: { type: string, enum: [summary, action_items, key_topics, tag_suggestions, category_suggestion] }
+        content: {}
+        model: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+    ExportRequest:
+      type: object
+      required: [format]
+      properties:
+        format: { type: string, enum: [txt, docx, pdf, srt] }
+        transcriptKind: { type: string, enum: [original, edited], default: edited }
+    SyncRow:
+      type: object
+      required: [id, updatedAt, version]
+      properties:
+        id: { type: string, format: uuid }
+        updatedAt: { type: string, format: date-time }
+        version: { type: integer }
+        deletedAt: { type: string, format: date-time, nullable: true }
+        entity: { type: string, enum: [recording, folder, tag, transcript_edit] }
+        payload: { type: object, description: Entity fields; schema per entity type }
+    SyncPushRequest:
+      type: object
+      required: [deviceId, rows]
+      properties:
+        deviceId: { type: string }
+        rows:
+          type: array
+          items: { $ref: "#/components/schemas/SyncRow" }
+    SyncPushResponse:
+      type: object
+      properties:
+        applied:
+          type: array
+          items: { type: string, format: uuid }
+        rejected:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              serverRow: { $ref: "#/components/schemas/SyncRow" }
+    SyncPullResponse:
+      type: object
+      properties:
+        rows:
+          type: array
+          items: { $ref: "#/components/schemas/SyncRow" }
+        cursor: { type: integer, description: Pass as ?since= next time }
