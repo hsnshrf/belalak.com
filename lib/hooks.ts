@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 /**
- * Tracks the user's `prefers-reduced-motion` setting so heavy scroll
- * choreography can be replaced with a static (but complete) layout.
+ * Tracks `prefers-reduced-motion` so heavy scroll choreography can be
+ * replaced with a static (but complete) layout.
  */
 export function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -19,3 +19,10 @@ export function usePrefersReducedMotion(): boolean {
 
   return reduced;
 }
+
+/**
+ * useLayoutEffect that is safe under Next.js SSR (falls back to useEffect
+ * on the server so React doesn't warn). GSAP setup wants layout timing.
+ */
+export const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;

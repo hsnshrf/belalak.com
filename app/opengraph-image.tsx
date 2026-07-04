@@ -1,17 +1,20 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Belalak Milk — From Pure Belarusian Milk to Premium Milk Powder";
+export const alt = "Belalak — Belarusian Milk Powder, From Farm to Spray Drier";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+/**
+ * Social-share card. Colors mirror the design tokens in app/globals.css
+ * (satori can't read CSS variables, so they're inlined here — keep in
+ * sync). The bundled Carlito woff stands in for the display face because
+ * the OG renderer needs an embedded font file.
+ */
 export default async function OpengraphImage() {
-  // Carlito = metric-compatible stand-in for Calibri (the site typeface);
-  // the OG renderer (satori) needs an embedded font file.
-  const [carlito, logo] = await Promise.all([
-    fetch(new URL("./fonts/carlito-700.woff", import.meta.url)).then((res) => res.arrayBuffer()),
-    fetch(new URL("./og-logo.png", import.meta.url)).then((res) => res.arrayBuffer()),
-  ]);
+  const carlito = await fetch(
+    new URL("./fonts/carlito-700.woff", import.meta.url)
+  ).then((res) => res.arrayBuffer());
 
   return new ImageResponse(
     (
@@ -23,53 +26,48 @@ export default async function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #041527 0%, #0A2E52 55%, #123A66 100%)",
-          color: "#FAFAFA",
+          background: "#16202B", // --c-steel-deep
+          color: "#FDFCF7", // --c-milk
           fontFamily: "Carlito",
         }}
       >
-        {/* brand logo on a white plate for contrast */}
-        <div
-          style={{
-            display: "flex",
-            background: "#FFFFFF",
-            borderRadius: 32,
-            padding: "28px 44px",
-            marginBottom: 40,
-            boxShadow: "0 18px 50px rgba(0,0,0,0.35)",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={logo as unknown as string}
-            alt=""
-            width={310}
-            height={260}
-            style={{ objectFit: "contain" }}
-          />
+        <div style={{ display: "flex", fontSize: 26, letterSpacing: 12, color: "#D9A63F" }}>
+          01 → 09
         </div>
         <div
           style={{
-            fontSize: 36,
-            color: "#FFF7E8",
+            display: "flex",
+            fontSize: 132,
+            fontWeight: 700,
+            letterSpacing: 10,
+            marginTop: 8,
+          }}
+        >
+          BELALAK
+        </div>
+        <div
+          style={{
+            display: "flex",
+            marginTop: 18,
+            fontSize: 34,
+            color: "#F3EDDF", // --c-ivory
             textAlign: "center",
             maxWidth: 940,
-            display: "flex",
           }}
         >
-          From Pure Belarusian Milk to Premium Milk Powder
+          Belarusian milk powder, from farm to spray drier
         </div>
         <div
           style={{
-            marginTop: 24,
+            display: "flex",
+            marginTop: 30,
             fontSize: 20,
             letterSpacing: 6,
-            color: "#C9A96A",
+            color: "#D9A63F", // --c-cream
             textTransform: "uppercase",
-            display: "flex",
           }}
         >
-          Premium Dairy Ingredients · Made in Belarus
+          SMP · WMP · Regular · Instant
         </div>
       </div>
     ),

@@ -1,33 +1,30 @@
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import MilkSpiral from "@/components/MilkSpiral";
-import ProcessJourney from "@/components/process/ProcessJourney";
-import Products from "@/components/Products";
-import WhyBelarus from "@/components/WhyBelarus";
-import Quality from "@/components/Quality";
-import Sustainability from "@/components/Sustainability";
-import GlobalExport from "@/components/GlobalExport";
-import About from "@/components/About";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
-import { products } from "@/lib/products";
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
+import Announcer from "@/components/journey/Announcer";
+import Journey from "@/components/journey/Journey";
+import LineSetupChip from "@/components/journey/LineSetupChip";
+import ProductsGrid from "@/components/ProductsGrid";
+import WhyBelarus from "@/components/WhyBelarus";
+import { VARIANT_LIST } from "@/lib/variants";
 
 /** Product structured data for rich results. */
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: "Belalak Milk Powder Products",
-  itemListElement: products.map((product, i) => ({
+  itemListElement: VARIANT_LIST.map((variant, i) => ({
     "@type": "ListItem",
     position: i + 1,
     item: {
       "@type": "Product",
-      name: `Belalak ${product.name}`,
-      description: product.description,
-      brand: { "@type": "Brand", name: "Belalak Milk" },
+      name: `Belalak ${variant.name}`,
+      description: variant.description,
+      brand: { "@type": "Brand", name: "Belalak" },
       countryOfOrigin: "Belarus",
       category: "Dairy Ingredients",
-      url: `https://belalak.com/#products`,
+      url: "https://belalak.com/#products",
     },
   })),
 };
@@ -39,20 +36,18 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
-      <Navbar />
+      <Header />
       <main>
         <Hero />
-        <MilkSpiral />
-        <ProcessJourney />
-        <Products />
+        <Journey />
         <WhyBelarus />
-        <Quality />
-        <Sustainability />
-        <GlobalExport />
-        <About />
+        <ProductsGrid />
         <Contact />
       </main>
       <Footer />
+      {/* journey helpers: SR announcements + floating change-my-choice chip */}
+      <Announcer />
+      <LineSetupChip />
     </>
   );
 }

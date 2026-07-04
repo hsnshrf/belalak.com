@@ -1,124 +1,80 @@
-# Belalak Milk — belalak.com
+# Belalak — Belarusian Milk Powder
 
-Premium brand website for **Belalak Milk**, a dairy ingredients brand sourcing and
-manufacturing high-quality milk powders in the Republic of Belarus. The site is an
-award-style interactive storytelling experience: a cinematic scroll journey that
-visually transforms fresh Belarusian milk into premium milk powder.
+Single-page, scroll-driven B2B site: the production journey of milk powder
+told in nine pinned, scrub-animated stages — from a Belarusian milking
+parlor to a sealed 25 kg bag — with two interactive decision points
+(skim/whole, instant/regular) that change the downstream visuals and the
+final product.
 
-## Tech Stack
+See **DESIGN.md** for the design plan: tokens, per-stage animation
+choreography and how the branching state flows.
 
-| Layer | Choice |
-| --- | --- |
-| Framework | Next.js 15 (App Router) + React 19 + TypeScript |
-| Styling | Tailwind CSS 3 (custom brand palette & utilities) |
-| Component animation | Framer Motion 12 |
-| Scroll choreography | GSAP 3 + ScrollTrigger (scrub-driven pinned scenes) |
-| Smooth scrolling | Lenis (integrated into GSAP's ticker) |
-| Particle effects | Hand-rolled `<canvas>` system (spray-drying tower) |
-| Fonts | Calibri site-wide, with self-hosted Carlito (metric-compatible open clone) as the web fallback via Fontsource |
-
-Three.js/R3F was deliberately left out: every scene is achievable with SVG + canvas +
-GSAP at a fraction of the bundle cost, which is what keeps Lighthouse comfortably
-above 90. The hero and spray-drying tower are the natural upgrade points if you later
-want real 3D.
-
-## The Experience
-
-1. **Cinematic hero** — a milk drop hangs in space; scrolling lets it fall while the
-   camera pulls back to reveal a stainless collection tank. Impact → splash → ripples →
-   the headline rises word by word.
-2. **Signature scroll journey** — six pinned, scrub-animated stages:
-   - *Collection* — tanker truck + parallax Belarusian countryside
-   - *Quality testing* — lab equipment fades in, tubes fill, batch stamped PASSED
-   - *Pasteurization* — self-drawing stainless lines, sweeping gauge, 72.5 °C counter
-   - *Concentration* — falling liquid level, rising vapour, solids counter 12 → 48 %
-   - *Spray drying* (centerpiece) — a live canvas particle system: **MILK → PARTICLES → POWDER**
-   - *Final product* — powder particles converge into the finished Belalak bag
-3. **Products** — 4 powders with CSS packaging mockups, hover sheen, spec modals and
-   downloadable PDF spec sheets (`public/specs`, regenerable via `npm run generate:specs`).
-4. **Why Belarus / Quality / Sustainability / Global Export / About / Contact** —
-   animated map, stat counters, interactive 5-step quality timeline, certification
-   badges, self-drawing illustrations, SMIL-animated export routes, glassmorphism
-   inquiry form posting to `/api/contact`.
-
-## Getting Started
+## Run it
 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
+npm run build      # production build
 ```
 
-Production build:
+## Stack
 
-```bash
-npm run build
-npm start
-```
+- **Next.js 15 (App Router) + TypeScript** — page shell is server-rendered
+  for SEO; everything animated is a client component.
+- **GSAP + ScrollTrigger** — one pinned, scrubbed timeline per stage.
+  Shared pin/scrub system: `lib/stageAnimation.ts` (`useStagePin`), which
+  also handles reduced motion and the mobile no-pin fallback. All stage
+  timelines are registered in a dev-inspectable registry
+  (`window.__belalakTimelines`).
+- **Lenis** smooth scrolling feeding `ScrollTrigger.update()`.
+- **Zustand** — `lib/journeyState.ts` holds the two branch choices.
+- **Framer Motion** — micro-interactions only (cards, chips, reveals),
+  wrapped in `MotionConfig reducedMotion="user"`.
+- **Canvas 2D** — `lib/sprayEngine.ts`, the spray-drying particle system
+  (throttled, viewport-gated, ~40 % particle budget on mobile).
+- **Tailwind CSS** — every color resolves to the CSS-variable tokens in
+  `app/globals.css`; no raw hex in components.
 
-## Deployment
-
-### Vercel (recommended)
-
-1. Push this repository to GitHub.
-2. Import it at [vercel.com/new](https://vercel.com/new) — Next.js is auto-detected,
-   no configuration needed.
-3. Add the `belalak.com` domain in *Project → Settings → Domains* and point the
-   domain's DNS (`A` → `76.76.21.21` or `CNAME` → `cname.vercel-dns.com`).
-
-### Any Node host
-
-```bash
-npm ci && npm run build
-npm start            # serves on $PORT (default 3000) behind your reverse proxy
-```
-
-## Going Live Checklist
-
-- **Contact form**: `app/api/contact/route.ts` validates and logs inquiries. Wire it
-  to Resend/SendGrid/SES or your CRM where marked.
-- **WhatsApp**: replace the placeholder number in `components/Contact.tsx`
-  (`wa.me/971500000000`).
-- **Certifications**: badge artwork in `components/Quality.tsx` is placeholder —
-  swap in licensed ISO/HACCP/Halal marks once certificates are in hand.
-- **Imagery**: all visuals are code-drawn placeholders (SVG/canvas/gradients); drop in
-  brand photography via `next/image` wherever richer texture is wanted.
-
-## SEO
-
-- Per-page metadata + Open Graph/Twitter cards (`app/layout.tsx`), OG image generated
-  at the edge (`app/opengraph-image.tsx`)
-- JSON-LD: `Organization` + `WebSite` (layout) and `Product` `ItemList` (home page)
-- `app/sitemap.ts` → `/sitemap.xml`, `app/robots.ts` → `/robots.txt`
-- Target keywords woven through copy: Belalak Milk, Milk Powder Supplier, Skim Milk
-  Powder, Whole Milk Powder, Whey Powder, Instant Fat Filled Milk Powder, Belarus Milk
-  Powder, Dairy Ingredients UAE, Milk Powder UAE
-
-## Performance & Accessibility
-
-- Calibri served from the visitor's system where available; small self-hosted Carlito fallback files otherwise. Zero image downloads, code-drawn graphics
-- Canvas work pauses when its section leaves the viewport; DPR capped at 2
-- `prefers-reduced-motion` honoured everywhere: Lenis disabled, scrub scenes collapse
-  to static final frames, decorative animation suppressed in CSS
-- Semantic landmarks, labelled SVG illustrations, focus-visible rings, keyboard-friendly
-  modal (Escape to close), `aria-live` form feedback
-
-## Project Structure
+## Structure
 
 ```
-app/                  layout (SEO), page, robots, sitemap, OG image, contact API
+app/            layout (fonts, metadata), page, /api/contact endpoint
 components/
-  Hero.tsx            cinematic milk-drop scene
-  process/            the six-stage scroll journey
-  Products.tsx        cards + spec modal + PDF downloads
-  WhyBelarus.tsx      animated map + stat counters
-  Quality.tsx         interactive timeline + certification badges
-  Sustainability.tsx  self-drawing illustrated pillars
-  GlobalExport.tsx    animated world trade map
-  About.tsx           brand story
-  Contact.tsx         glassmorphism inquiry form
-  SmoothScroll.tsx    Lenis ⇄ GSAP bridge
-  ui/                 Reveal, SectionHeading, Counter
-lib/                  gsap setup, hooks, product data
-scripts/              PDF spec-sheet generator
-public/specs/         generated specification PDFs
+  journey/      Stage01Farm … Stage09Product, StreamConnector,
+                ChoiceCards, LineSetupChip, Announcer, Journey
+  Header.tsx    sticky header + pipeline progress indicator
+  Hero, WhyBelarus, ProductsGrid, Contact, Footer, PhotoSlot, Reveal
+lib/            gsap setup, stage pin system, journey store, spray engine,
+                stage metadata, product variant data
+scripts/        generate-specs.mjs → /public/specs PDFs
 ```
+
+## Accessibility & motion
+
+- `prefers-reduced-motion`: no pinning, no scrub, no canvas loop (one
+  static frame). All markup is authored in its final state, so every stage
+  is fully legible without motion.
+- Both decision points are plain buttons (`aria-pressed`), keyboard
+  operable with visible focus; selections and applied defaults are
+  announced via a polite live region (`Announcer.tsx`).
+- Scrolling past a decision applies a default (whole / regular); the
+  floating "line setup" chip and stage 09 let visitors change it anytime.
+
+## OWNER: what to customize before going live
+
+1. **Photography** — every `PhotoSlot` marks a slot with alt text and
+   stock-search terms (farm stage, Why Belarus). Replace with licensed
+   photos via `next/image` (instructions inside `components/PhotoSlot.tsx`).
+2. **Verified claims** — search the codebase for `OWNER:` comments:
+   spec values in `lib/variants.ts` (match your plant COA), the raw-milk
+   intake limits in `Stage03Testing.tsx`, and the Why-Belarus claims.
+   List certifications (ISO, HALAL, …) only if currently held.
+3. **Contact email** — `export@belalak.com` appears in `Contact.tsx`,
+   `Footer.tsx` and `app/layout.tsx` structured data.
+4. **RFQ backend** — `app/api/contact/route.ts` validates and logs; wire
+   your CRM or email provider (Resend/SendGrid/SES) there.
+5. **Brand colors/typography** — edit the token block at the top of
+   `app/globals.css` (and the mirrored hex values in
+   `app/opengraph-image.tsx`); fonts load in `app/layout.tsx`.
+6. **Spec sheet PDFs** — regenerate with `npm run generate:specs` after
+   updating values in `scripts/generate-specs.mjs`.
