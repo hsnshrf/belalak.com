@@ -1,15 +1,32 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Delete,
   Get,
   HttpCode,
+  Patch,
   Post,
   Query,
   UseGuards,
 } from "@nestjs/common";
+import { z } from "zod";
 import { AuthGuard, CurrentUser, type AuthUser } from "../common/auth.guard";
+import { ZodPipe } from "../common/zod.pipe";
 import { DbService } from "../db/db.service";
+
+/**
+ * Per-user settings stored in users.settings (jsonb). Client-agnostic so web
+ * and mobile stay in sync through /v1/sync as well.
+ */
+const settingsSchema = z.object({
+  locale: z.enum(["en", "ar"]).optional(),
+  /** Verbal "this call is being recorded" announcement default for call/meeting modes. */
+  announcementDefaultOn: z.boolean().optional(),
+  defaultQualityPreset: z.enum(["voice", "standard", "high"]).optional(),
+  /** Local-only mode: nothing leaves the device; transcription on-device or via user-supplied key. */
+  localOnlyMode: z.boolean().optional(),
+});
 
 @Controller("v1/account")
 @UseGuards(AuthGuard)
@@ -41,6 +58,29 @@ export class AccountController {
       recordingCount: bySource.reduce((a, b) => a + b.recordingCount, 0),
       bySource,
     };
+  }
+
+  @Get("settings")
+  async getSettings(@CurrentUser() user: AuthUser) {
+    const { rows } = await this.db.query<{ settings: Record<string, unknown>; locale: string }>(
+      "SELECT settings, locale FROM users WHERE id = $1",
+      [user.userId],
+    );
+    return { locale: rows[0]?.locale ?? "en", announcementDefaultOn: true, ...rows[0]?.settings };
+  }
+
+  @Patch("settings")
+  async patchSettings(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodPipe(settingsSchema)) body: z.infer<typeof settingsSchema>,
+  ) {
+    const { rows } = await this.db.query<{ settings: Record<string, unknown> }>(
+      `UPDATE users SET settings = settings || $2::jsonb,
+         locale = coalesce($3, locale), updated_at = now()
+       WHERE id = $1 RETURNING settings`,
+      [user.userId, JSON.stringify(body), body.locale ?? null],
+    );
+    return rows[0]?.settings ?? {};
   }
 
   /**
