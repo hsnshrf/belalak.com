@@ -4,6 +4,8 @@ import { AiController } from "./ai/ai.controller";
 import { AiService } from "./ai/ai.service";
 import { AuthController } from "./auth/auth.controller";
 import { ExportsController } from "./exports/exports.controller";
+import { MeetingBotController } from "./meeting-bot/meeting-bot.controller";
+import { MeetBotStub, TeamsBotStub, WebexBotStub, ZoomBotStub } from "./meeting-bot/providers/stubs";
 import { OrganizationController } from "./organization/organization.controller";
 import { AuthService } from "./auth/auth.service";
 import { OAuthService } from "./auth/oauth.service";
@@ -36,6 +38,7 @@ import { UploadsService } from "./uploads/uploads.service";
     OrganizationController,
     AiController,
     ExportsController,
+    MeetingBotController,
   ],
   providers: [
     DbService,
@@ -52,6 +55,10 @@ import { UploadsService } from "./uploads/uploads.service";
     SearchService,
     SyncService,
     AiService,
+    ZoomBotStub,
+    TeamsBotStub,
+    MeetBotStub,
+    WebexBotStub,
   ],
 })
 export class AppModule {}
