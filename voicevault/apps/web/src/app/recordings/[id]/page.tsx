@@ -3,6 +3,7 @@
 import type { Recording, Speaker, Transcript } from "@voicevault/shared";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { OrganizePanel } from "@/components/OrganizePanel";
 import { TranscriptView } from "@/components/TranscriptView";
 import { api } from "@/lib/api-client";
 import { useI18n } from "@/lib/i18n";
@@ -107,6 +108,14 @@ export default function RecordingDetailPage() {
         {detail.languageDominant ? ` · ${detail.languageDominant}` : ""}
         {detail.consentAcknowledged ? " · consent ✓" : ""}
       </p>
+
+      <OrganizePanel
+        recordingId={detail.id}
+        folderId={detail.folderId}
+        categoryId={detail.categoryId}
+        tagIds={detail.tagIds}
+        onChanged={load}
+      />
 
       {detail.audioUrl ? (
         <div className="card">

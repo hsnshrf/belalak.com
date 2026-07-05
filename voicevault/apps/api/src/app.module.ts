@@ -1,6 +1,9 @@
 import { Module } from "@nestjs/common";
 import { AccountController } from "./account/account.controller";
+import { AiController } from "./ai/ai.controller";
+import { AiService } from "./ai/ai.service";
 import { AuthController } from "./auth/auth.controller";
+import { OrganizationController } from "./organization/organization.controller";
 import { AuthService } from "./auth/auth.service";
 import { OAuthService } from "./auth/oauth.service";
 import { DbService } from "./db/db.service";
@@ -27,6 +30,8 @@ import { UploadsService } from "./uploads/uploads.service";
     SearchController,
     SyncController,
     AccountController,
+    OrganizationController,
+    AiController,
   ],
   providers: [
     DbService,
@@ -40,6 +45,7 @@ import { UploadsService } from "./uploads/uploads.service";
     WhisperApiProvider,
     SearchService,
     SyncService,
+    AiService,
   ],
 })
 export class AppModule {}
