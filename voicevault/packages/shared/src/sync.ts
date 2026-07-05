@@ -66,7 +66,7 @@ export interface MergeResult<T extends SyncableRow> {
  */
 export function mergeRecords<T extends SyncableRow>(
   incoming: T[],
-  current: ReadonlyMap<string, T>,
+  current: ReadonlyMap<string, SyncableRow>,
 ): MergeResult<T> {
   const result: MergeResult<T> = { toApply: [], rejected: [], unchanged: [] };
   for (const row of incoming) {
