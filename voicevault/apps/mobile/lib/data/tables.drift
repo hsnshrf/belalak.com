@@ -1,0 +1,111 @@
+-- Local offline-first schema (SQLite via Drift).
+-- Mirrors the server schema's syncable subset; every syncable row carries
+-- (version, updated_at, deleted_at) for the LWW+tombstone merge, plus
+-- dirty=1 when it has local changes awaiting push.
+
+CREATE TABLE local_recordings (
+  id TEXT NOT NULL PRIMARY KEY,
+  title TEXT NOT NULL,
+  source_type TEXT NOT NULL DEFAULT 'mic',
+  capture_strategy TEXT,
+  quality_preset TEXT NOT NULL DEFAULT 'standard',
+  folder_id TEXT,
+  category_id TEXT,
+  duration_seconds REAL,
+  language TEXT,
+  transcription_status TEXT,
+  consent_acknowledged INTEGER NOT NULL DEFAULT 0,
+  consent_acknowledged_at TEXT,
+  announcement_played INTEGER NOT NULL DEFAULT 0,
+  is_favorite INTEGER NOT NULL DEFAULT 0,
+  archived_at TEXT,
+  trashed_at TEXT,
+  recorded_at TEXT NOT NULL,
+  -- Local file path of the audio (kept for offline playback until synced+evicted)
+  local_audio_path TEXT,
+  upload_state TEXT NOT NULL DEFAULT 'pending', -- pending | uploading | uploaded | failed
+  version INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  dirty INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE local_transcripts (
+  recording_id TEXT NOT NULL PRIMARY KEY REFERENCES local_recordings (id),
+  kind TEXT NOT NULL DEFAULT 'original',
+  text TEXT NOT NULL,
+  language TEXT,
+  segments_json TEXT NOT NULL, -- JSON: [{id,start,end,speaker,language,text,words:[{w,s,e}]}]
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE local_folders (
+  id TEXT NOT NULL PRIMARY KEY,
+  parent_id TEXT,
+  name TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  dirty INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE local_tags (
+  id TEXT NOT NULL PRIMARY KEY,
+  name TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  dirty INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE local_recording_tags (
+  recording_id TEXT NOT NULL REFERENCES local_recordings (id),
+  tag_id TEXT NOT NULL REFERENCES local_tags (id),
+  PRIMARY KEY (recording_id, tag_id)
+);
+
+-- Upload manifest for interruption recovery: which byte ranges of which
+-- recording file have been shipped. Survives app kill / battery death.
+CREATE TABLE upload_manifest (
+  recording_id TEXT NOT NULL,
+  session_id TEXT,
+  seq INTEGER NOT NULL,
+  start_byte INTEGER NOT NULL,
+  end_byte INTEGER NOT NULL,
+  uploaded INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (recording_id, seq)
+);
+
+-- Sync cursor per entity stream.
+CREATE TABLE sync_state (
+  key TEXT NOT NULL PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+-- Offline full-text search over transcripts (FTS5, unicode tokenizer with
+-- diacritic removal so Arabic/Farsi/Urdu queries match vowelled text).
+CREATE VIRTUAL TABLE transcript_fts USING fts5(
+  recording_id UNINDEXED,
+  title,
+  body,
+  tokenize = "unicode61 remove_diacritics 2"
+);
+
+-- Queries used by the app (Drift generates typed Dart methods for these):
+
+librarySummaries:
+SELECT r.*, t.language AS t_language
+FROM local_recordings r
+LEFT JOIN local_transcripts t ON t.recording_id = r.id
+WHERE r.deleted_at IS NULL AND r.trashed_at IS NULL
+ORDER BY r.recorded_at DESC;
+
+ftsSearch:
+SELECT recording_id, title, snippet(transcript_fts, 2, '«', '»', '…', 12) AS snip
+FROM transcript_fts
+WHERE transcript_fts MATCH :query
+ORDER BY rank
+LIMIT 50;
+
+dirtyRecordings:
+SELECT * FROM local_recordings WHERE dirty = 1;

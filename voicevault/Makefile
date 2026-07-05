@@ -19,7 +19,9 @@ check-js: install
 
 check-mobile:
 	@if command -v flutter >/dev/null 2>&1; then \
-		cd apps/mobile && flutter analyze && flutter test; \
+		cd apps/mobile && flutter pub get && \
+		dart run build_runner build --delete-conflicting-outputs && \
+		flutter analyze && flutter test; \
 	else \
 		echo "WARNING: Flutter SDK not found — skipping mobile analyze/tests (install Flutter to enable)."; \
 	fi

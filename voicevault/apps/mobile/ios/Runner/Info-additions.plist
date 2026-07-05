@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Keys to merge into ios/Runner/Info.plist after `flutter create` generates
+  the iOS project (see README "Platform setup"). Kept as a separate file so
+  the required entries are version-controlled even before the Xcode project
+  exists in this repo.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Mic access prompt (App Store requires an honest, specific string) -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>VoiceVault records audio you choose to capture — voice notes, meetings on speaker, and calls on speakerphone — so it can transcribe and search them.</string>
+
+    <!-- Background recording: keep the audio session alive when backgrounded -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+        <string>processing</string>
+    </array>
+
+    <!-- NOTE deliberately ABSENT: anything implying cellular call recording.
+         Apple provides no API for third-party call recording (the iOS 18.1+
+         native feature is not exposed to apps); VoiceVault offers
+         speakerphone capture with a clear explanation instead. -->
+</dict>
+</plist>
