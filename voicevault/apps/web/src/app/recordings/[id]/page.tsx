@@ -3,6 +3,8 @@
 import type { Recording, Speaker, Transcript } from "@voicevault/shared";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AiPanel } from "@/components/AiPanel";
+import { ExportMenu } from "@/components/ExportMenu";
 import { OrganizePanel } from "@/components/OrganizePanel";
 import { TranscriptView } from "@/components/TranscriptView";
 import { api } from "@/lib/api-client";
@@ -152,6 +154,15 @@ export default function RecordingDetailPage() {
         </div>
       ) : (
         <p className="muted">Audio is still uploading…</p>
+      )}
+
+      {detail.transcript && (
+        <>
+          <div className="card">
+            <ExportMenu recordingId={detail.id} />
+          </div>
+          <AiPanel recordingId={detail.id} />
+        </>
       )}
 
       {detail.transcript ? (

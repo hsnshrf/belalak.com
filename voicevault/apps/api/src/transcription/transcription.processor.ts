@@ -3,6 +3,8 @@ import type { TranscriptSegment } from "@voicevault/shared";
 import { Worker, type Job } from "bullmq";
 import { DbService } from "../db/db.service";
 import { StorageService } from "../storage/storage.service";
+import { DeepgramProvider } from "./providers/deepgram.provider";
+import { LocalWhisperProvider } from "./providers/local-whisper.provider";
 import { WhisperApiProvider } from "./providers/whisper-api.provider";
 import type { TranscriptionProvider, TranscriptionResult } from "./provider.interface";
 import {
@@ -28,8 +30,12 @@ export class TranscriptionProcessor implements OnModuleInit, OnModuleDestroy {
     private readonly storage: StorageService,
     private readonly queue: TranscriptionQueue,
     whisper: WhisperApiProvider,
+    deepgram: DeepgramProvider,
+    localWhisper: LocalWhisperProvider,
   ) {
     this.register(whisper);
+    this.register(deepgram);
+    this.register(localWhisper);
   }
 
   /** Additional adapters (Deepgram, local whisper.cpp) self-register here. */

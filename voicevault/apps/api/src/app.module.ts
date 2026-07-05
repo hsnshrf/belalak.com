@@ -3,6 +3,7 @@ import { AccountController } from "./account/account.controller";
 import { AiController } from "./ai/ai.controller";
 import { AiService } from "./ai/ai.service";
 import { AuthController } from "./auth/auth.controller";
+import { ExportsController } from "./exports/exports.controller";
 import { OrganizationController } from "./organization/organization.controller";
 import { AuthService } from "./auth/auth.service";
 import { OAuthService } from "./auth/oauth.service";
@@ -17,6 +18,8 @@ import { SyncService } from "./sync/sync.service";
 import { TranscriptionController } from "./transcription/transcription.controller";
 import { TranscriptionProcessor } from "./transcription/transcription.processor";
 import { TranscriptionQueue } from "./transcription/transcription.queue";
+import { DeepgramProvider } from "./transcription/providers/deepgram.provider";
+import { LocalWhisperProvider } from "./transcription/providers/local-whisper.provider";
 import { WhisperApiProvider } from "./transcription/providers/whisper-api.provider";
 import { UploadsController } from "./uploads/uploads.controller";
 import { UploadsService } from "./uploads/uploads.service";
@@ -32,6 +35,7 @@ import { UploadsService } from "./uploads/uploads.service";
     AccountController,
     OrganizationController,
     AiController,
+    ExportsController,
   ],
   providers: [
     DbService,
@@ -43,6 +47,8 @@ import { UploadsService } from "./uploads/uploads.service";
     TranscriptionQueue,
     TranscriptionProcessor,
     WhisperApiProvider,
+    DeepgramProvider,
+    LocalWhisperProvider,
     SearchService,
     SyncService,
     AiService,
