@@ -27,4 +27,8 @@ yarn-error.log*
 
 # vercel
 .vercel
-.claude/
+
+# claude (ignore local state, keep shared skills)
+.claude/*
+!.claude/skills/
+__pycache__/
